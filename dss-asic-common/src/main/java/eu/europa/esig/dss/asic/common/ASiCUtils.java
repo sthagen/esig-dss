@@ -940,15 +940,15 @@ public final class ASiCUtils {
 				}
 				if (isMagicStart) {
 					// Magic Start found!
-					int commentLen = buffer[ii + 20] + buffer[ii + 21] * 256;
+                    int commentLen = Byte.toUnsignedInt(buffer[ii + 20]) | (Byte.toUnsignedInt(buffer[ii + 21]) << 8);
 					int realLen = len - ii - 22;
 					if (commentLen != realLen) {
 						LOG.warn("WARNING! ZIP comment size mismatch: directory says len is {}, but file ends after {} bytes!", commentLen, realLen);
 					}
-					if (realLen == 0) {
+					if (realLen == 0 || commentLen == 0) {
 						return null;
 					}
-					return new String(buffer, ii + 22, realLen);
+					return new String(buffer, ii + 22, commentLen);
 				}
 			}
 		} catch (final IOException e) {
