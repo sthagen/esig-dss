@@ -30,9 +30,11 @@ import eu.europa.esig.dss.model.InMemoryDocument;
 import eu.europa.esig.dss.spi.DSSUtils;
 import org.junit.jupiter.api.Test;
 
+import java.io.ByteArrayOutputStream;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -229,5 +231,53 @@ class ASiCUtilsTest {
 		assertEquals(ASiCContainerType.ASiC_E, ASiCUtils.getContainerType(asicContent));
 		assertEquals(ASiCContainerType.ASiC_E, ASiCUtils.getContainerType(ZipUtils.getInstance().createZipArchive(asicContent)));
 	}
+
+    @Test
+    void getZipCommentWithoutCommentWithTrailingBytes() throws Exception {
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+
+        try (ZipOutputStream zos = new ZipOutputStream(baos)) {
+            zos.putNextEntry(new ZipEntry("test.txt"));
+            zos.write("content".getBytes());
+            zos.closeEntry();
+        }
+
+        // Append trailing bytes after the EOCD record
+        byte[] zipBytes = baos.toByteArray();
+        byte[] trailingBytes = "TRAILING_BYTES".getBytes();
+        byte[] malformedZip = Arrays.copyOf(zipBytes, zipBytes.length + trailingBytes.length);
+        System.arraycopy(trailingBytes, 0, malformedZip, zipBytes.length, trailingBytes.length);
+
+        DSSDocument document = new InMemoryDocument(malformedZip, "test.asice");
+
+        // trailing bytes after comment should not be extracted with the comment
+        String comment = ASiCUtils.getZipComment(document);
+        assertNull(comment);
+    }
+
+    @Test
+    void getZipCommentWithCommentAndTrailingBytes() throws Exception {
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+
+        String commentValue = "comment";
+        try (ZipOutputStream zos = new ZipOutputStream(baos)) {
+            zos.setComment(commentValue);
+            zos.putNextEntry(new ZipEntry("test.txt"));
+            zos.write("content".getBytes());
+            zos.closeEntry();
+        }
+
+        // Append trailing bytes after the EOCD record
+        byte[] zipBytes = baos.toByteArray();
+        byte[] trailingBytes = "TRAILING_BYTES".getBytes();
+        byte[] malformedZip = Arrays.copyOf(zipBytes, zipBytes.length + trailingBytes.length);
+        System.arraycopy(trailingBytes, 0, malformedZip, zipBytes.length, trailingBytes.length);
+
+        DSSDocument document = new InMemoryDocument(malformedZip, "test.asice");
+
+        // trailing bytes after comment should not be extracted with the comment
+        String comment = ASiCUtils.getZipComment(document);
+        assertEquals(commentValue, comment);
+    }
 
 }
