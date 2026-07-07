@@ -550,7 +550,7 @@ public abstract class AbstractPDFSignatureService implements PDFSignatureService
 			for (Map.Entry<PdfSignatureDictionary, List<PdfSignatureField>> sigDictEntry : sigDictionaries.entrySet()) {
 				PdfSignatureDictionary signatureDictionary = sigDictEntry.getKey();
 				List<PdfSignatureField> fields = sigDictEntry.getValue();
-				List<String> fieldNames = toStringNames(fields);
+				List<String> fieldNames = toStringFullyQualifiedNames(fields);
 
 				try {
 					LOG.info("Signature fields: {}", fieldNames);
@@ -714,16 +714,16 @@ public abstract class AbstractPDFSignatureService implements PDFSignatureService
 		for (Map.Entry<PdfSignatureDictionary, List<PdfSignatureField>> entry : pdfSignatureDictionaryListMap.entrySet()) {
 			PdfSignatureDictionary signatureDictionary = entry.getKey();
 			List<PdfSignatureField> signatureFields = entry.getValue();
-			if (fieldNames.equals(toStringNames(signatureFields))) {
+			if (fieldNames.equals(toStringFullyQualifiedNames(signatureFields))) {
 				return signatureDictionary;
 			}
 		}
 		return null;
 	}
 
-	private List<String> toStringNames(List<PdfSignatureField> signatureFields) {
-		return signatureFields.stream().map(PdfSignatureField::getFieldName).collect(Collectors.toList());
-	}
+    private List<String> toStringFullyQualifiedNames(List<PdfSignatureField> signatureFields) {
+        return signatureFields.stream().map(PdfSignatureField::getFullyQualifiedName).collect(Collectors.toList());
+    }
 
 	private PdfDssDict getPreviousDssDictAndUpdateIfNeeded(List<PdfRevision> revisions,
 														   PdfCompositeDssDictionary compositeDssDictionary,

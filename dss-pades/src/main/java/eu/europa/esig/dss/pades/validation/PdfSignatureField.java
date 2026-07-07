@@ -39,6 +39,9 @@ public class PdfSignatureField implements Serializable {
     /** Name of the  signature field */
     private final String fieldName;
 
+    /** Fully qualified name of the signature field */
+    private final String fullyQualifiedName;
+
     /** The lock dictionary */
     private final SigFieldPermissions lockDictionary;
 
@@ -50,11 +53,28 @@ public class PdfSignatureField implements Serializable {
     public PdfSignatureField(final PdfDict sigFieldDict) {
         Objects.requireNonNull(sigFieldDict, "sigFieldDict cannot be null!");
         this.fieldName = extractFieldName(sigFieldDict);
+        this.fullyQualifiedName = extractFullyQualifiedName(sigFieldDict);
         this.lockDictionary = extractLockDictionary(sigFieldDict);
     }
 
     private static String extractFieldName(PdfDict sigFieldDict) {
         return sigFieldDict.getStringValue(PAdESConstants.FIELD_NAME_NAME);
+    }
+
+    private static String extractFullyQualifiedName(PdfDict sigFieldDict) {
+        StringBuilder fullyQualifiedName = new StringBuilder();
+        PdfDict currentDict = sigFieldDict;
+        while (currentDict != null) {
+            String partialName = currentDict.getStringValue(PAdESConstants.FIELD_NAME_NAME);
+            if (partialName != null) {
+                if (fullyQualifiedName.length() > 0) {
+                    fullyQualifiedName.insert(0, ".");
+                }
+                fullyQualifiedName.insert(0, partialName);
+            }
+            currentDict = currentDict.getAsDict(PAdESConstants.PARENT_NAME);
+        }
+        return fullyQualifiedName.length() > 0 ? fullyQualifiedName.toString() : null;
     }
 
     private static SigFieldPermissions extractLockDictionary(PdfDict sigFieldDict) {
@@ -72,6 +92,15 @@ public class PdfSignatureField implements Serializable {
      */
     public String getFieldName() {
         return fieldName;
+    }
+
+    /**
+     * This method returns a signature field's fully qualified name.
+     *
+     * @return {@link String} fully qualified name
+     */
+    public String getFullyQualifiedName() {
+        return fullyQualifiedName;
     }
 
     /**
