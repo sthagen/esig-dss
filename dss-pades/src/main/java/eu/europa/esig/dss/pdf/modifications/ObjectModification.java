@@ -132,7 +132,7 @@ public class ObjectModification {
 
     /**
      * Returns a name of the changed field object, when applicable
-     *
+     * <p>
      * NOTE: the object shall be a type of field. Returns null for other objects.
      *
      * @return {@link String} field name, when applicable. NULL otherwise.

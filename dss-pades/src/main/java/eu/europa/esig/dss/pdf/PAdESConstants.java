@@ -66,6 +66,12 @@ public final class PAdESConstants {
 	/** 'TS' */
 	public static final String TS_DICTIONARY_NAME_VRI = "TS";
 
+	/** Annotation subtype 'Widget' (form) */
+	public static final String SUBTYPE_WIDGET = "Widget";
+
+	/** Dictionary type 'Annot' */
+	public static final String TYPE_ANNOT = "Annot";
+
 	/* Field names */
 
 	/** 'AcroForm' */
@@ -116,6 +122,8 @@ public final class PAdESConstants {
 	public static final String FILTER_NAME = "Filter";
 	/** 'Font' */
 	public static final String FONT_NAME = "Font";
+	/** 'FT' */
+	public static final String FT_NAME = "FT";
 	/** 'ITXT' (iText identifier) */
 	public static final String ITEXT_NAME = "ITXT";
 	/** 'Kids' */
@@ -172,6 +180,8 @@ public final class PAdESConstants {
 	public static final String STRUCT_TREE_ROOT_PARENT_TREE_NEXT_KEY_NAME = "ParentTreeNextKey";
 	/** 'SubFilter' */
 	public static final String SUB_FILTER_NAME = "SubFilter";
+	/** 'Subtype' */
+	public static final String SUBTYPE_NAME = "Subtype";
 	/** 'Type' */
 	public static final String TYPE_NAME = "Type";
 	/** 'TransformMethod' */
