@@ -140,11 +140,25 @@ public class ObjectModification {
     public String getFieldName() {
         String fieldName = null;
         if (originalObject instanceof PdfDict) {
-            fieldName = ((PdfDict) originalObject).getStringValue(PAdESConstants.FIELD_NAME_NAME);
+            fieldName = getFieldName((PdfDict) originalObject);
         } else if (finalObject instanceof PdfDict) {
-            fieldName = ((PdfDict) finalObject).getStringValue(PAdESConstants.FIELD_NAME_NAME);
+            fieldName = getFieldName((PdfDict) finalObject);
+        }
+        // extract from parent
+        if (fieldName == null) {
+            PdfObject originalParent = originalObject != null ? originalObject.getParent() : null;
+            PdfObject finalParent = finalObject != null ? finalObject.getParent() : null;
+            if (originalParent instanceof PdfDict) {
+                fieldName = getFieldName((PdfDict) originalParent);
+            } else if (finalParent instanceof PdfDict) {
+                fieldName = getFieldName((PdfDict) finalParent);
+            }
         }
         return fieldName;
+    }
+
+    private String getFieldName(PdfDict pdfDict) {
+        return pdfDict.getStringValue(PAdESConstants.FIELD_NAME_NAME);
     }
 
     /**

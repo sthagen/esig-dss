@@ -355,22 +355,11 @@ public class PdfObjectModificationsFilter {
 
     private boolean isEmptyAnnotFill(ObjectModification objectModification) {
         boolean appearanceDictChangeFound = false;
-        boolean normalAppearanceFound = false;
-        if (PdfObjectModificationType.MODIFICATION.equals(objectModification.getActionType())) {
-            for (String chainKey : objectModification.getObjectTree().getKeyChain()) {
-                if (PAdESConstants.APPEARANCE_DICTIONARY_NAME.equals(chainKey)) {
-                    appearanceDictChangeFound = true;
-                } else if (appearanceDictChangeFound && PAdESConstants.NORMAL_APPEARANCE_NAME.equals(chainKey)) {
-                    normalAppearanceFound = true;
-                }
-
-                if (normalAppearanceFound) {
-                    if (PAdESConstants.LENGTH_NAME.equals(chainKey)) {
-                        return true;
-                    } else if (isStreamFill(objectModification)) {
-                        return true;
-                    }
-                }
+        for (String chainKey : objectModification.getObjectTree().getKeyChain()) {
+            if (PAdESConstants.APPEARANCE_DICTIONARY_NAME.equals(chainKey)) {
+                appearanceDictChangeFound = true;
+            } else if (appearanceDictChangeFound && PAdESConstants.NORMAL_APPEARANCE_NAME.equals(chainKey)) {
+                return true;
             }
         }
         return false;
@@ -424,8 +413,17 @@ public class PdfObjectModificationsFilter {
         String finalType = finalObject instanceof PdfDict ? ((PdfDict) finalObject).getNameValue(PAdESConstants.TYPE_NAME) : null;
         String originalSubtype = originalObject instanceof PdfDict ? ((PdfDict) originalObject).getNameValue(PAdESConstants.SUBTYPE_NAME) : null;
         String finalSubtype = finalObject instanceof PdfDict ? ((PdfDict) finalObject).getNameValue(PAdESConstants.SUBTYPE_NAME) : null;
-        if (PAdESConstants.TYPE_ANNOT.equals(finalType) && (originalType == null || originalType.equals(finalType))) {
-            return targetType.equals(finalSubtype) && (originalSubtype == null || originalSubtype.equals(finalSubtype));
+
+        if (originalObject != null && finalObject != null) {
+            if (PAdESConstants.TYPE_ANNOT.equals(originalType) || PAdESConstants.TYPE_ANNOT.equals(finalType)) {
+                return targetType.equals(originalSubtype) && originalType.equals(finalType) && originalSubtype.equals(finalSubtype);
+            }
+        }
+        if (PAdESConstants.TYPE_ANNOT.equals(originalType)) {
+            return targetType.equals(originalSubtype);
+        }
+        if (PAdESConstants.TYPE_ANNOT.equals(finalType)) {
+            return targetType.equals(finalSubtype);
         }
 
         PdfObjectKey finalParentKey = finalObject instanceof PdfDict ? ((PdfDict) finalObject).getObjectKey(PAdESConstants.PARENT_NAME) : null;
