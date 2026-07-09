@@ -20,18 +20,28 @@
  */
 package eu.europa.esig.dss.token;
 
+import eu.europa.esig.dss.enumerations.EncryptionAlgorithm;
+import eu.europa.esig.dss.enumerations.SignatureAlgorithm;
 import eu.europa.esig.dss.model.DSSException;
+import eu.europa.esig.dss.model.Digest;
+import eu.europa.esig.dss.model.SignatureValue;
 
 import java.io.IOException;
 import java.security.GeneralSecurityException;
 import java.security.KeyStore;
 import java.security.KeyStore.PasswordProtection;
+import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
+import java.security.Signature;
 
 /**
  * Class holding all MS CAPI API access logic.
  *
  */
 public class MSCAPISignatureToken extends AbstractKeyStoreTokenConnection {
+
+	/** The SunMSCAPI provider name */
+	private static final String SUN_MSCAPI = "SunMSCAPI";
 
 	/**
 	 * Default constructor
@@ -58,8 +68,41 @@ public class MSCAPISignatureToken extends AbstractKeyStoreTokenConnection {
 	}
 
 	@Override
+	protected Signature getSignatureInstance(final String javaSignatureAlgorithm) throws NoSuchAlgorithmException {
+		try {
+			if (javaSignatureAlgorithm.contains("RSAandMGF1")) {
+                // See https://github.com/bcgit/bc-java/issues/2280
+				return Signature.getInstance(EncryptionAlgorithm.RSASSA_PSS.getName(), SUN_MSCAPI);
+			}
+		} catch (NoSuchProviderException e) {
+            throw new DSSException("Unable to load signature instance with provider " + SUN_MSCAPI, e);
+        }
+
+        return super.getSignatureInstance(javaSignatureAlgorithm);
+    }
+
+    @Override
+    public SignatureValue signDigest(final Digest digest, final SignatureAlgorithm signatureAlgorithm, final DSSPrivateKeyEntry keyEntry) throws DSSException {
+        verifyIfSignDigestPossible(digest, signatureAlgorithm, keyEntry);
+        return super.signDigest(digest, signatureAlgorithm, keyEntry);
+    }
+
+    @Override
 	public void close() {
 		// nothing to close
 	}
+
+    /**
+     * Method that verifies if the digest signature is possible.
+     *
+     * @param digest The digested data that need to be signed
+     * @param signatureAlgorithm The signature algorithm
+     * @param keyEntry The private key to be used
+     */
+    protected void verifyIfSignDigestPossible(final Digest digest, final SignatureAlgorithm signatureAlgorithm, final DSSPrivateKeyEntry keyEntry) {
+        if (signatureAlgorithm.getEncryptionAlgorithm().equals(EncryptionAlgorithm.RSASSA_PSS)) {
+            throw new DSSException("Not possible to sign digest with security provider " + SUN_MSCAPI + " using RSASSA-PSS encryption algorithm.");
+        }
+    }
 
 }
