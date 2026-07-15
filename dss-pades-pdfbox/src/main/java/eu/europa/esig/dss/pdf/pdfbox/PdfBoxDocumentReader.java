@@ -177,7 +177,7 @@ public class PdfBoxDocumentReader implements PdfDocumentReader {
 	}
 
 	@Override
-	public Map<PdfSignatureDictionary, List<PdfSignatureField>> extractSigDictionaries() throws IOException {
+	public Map<PdfSignatureDictionary, List<PdfSignatureField>> extractSigDictionaries() {
 		if (signatureDictionaryMap == null) {
 			signatureDictionaryMap = new LinkedHashMap<>();
 			Map<Long, PdfSignatureDictionary> pdfObjectDictMap = new LinkedHashMap<>();
@@ -188,11 +188,12 @@ public class PdfBoxDocumentReader implements PdfDocumentReader {
 
 				for (PDSignatureField signatureField : pdSignatureFields) {
 					final PdfBoxDict sigFieldDict = new PdfBoxDict(signatureField.getCOSObject(), pdDocument);
-					final PdfSignatureField pdfSignatureField = new PdfSignatureField(sigFieldDict);
+					final String fullyQualifiedName = signatureField.getFullyQualifiedName();
+					final PdfSignatureField pdfSignatureField = new PdfSignatureField(sigFieldDict, fullyQualifiedName);
 
 					COSObject sigDictObject = signatureField.getCOSObject().getCOSObject(COSName.V);
 					if (sigDictObject == null || !(sigDictObject.getObject() instanceof COSDictionary)) {
-						LOG.warn("Signature field with name '{}' does not contain a signature", pdfSignatureField.getFieldName());
+						LOG.warn("Signature field with name '{}' does not contain a signature", fullyQualifiedName);
 						continue;
 					}
 
@@ -204,7 +205,7 @@ public class PdfBoxDocumentReader implements PdfDocumentReader {
 							signature = new PdfSigDictWrapperFactory(dictionary).create();
 						} catch (Exception e) {
 							LOG.warn("Unable to create a PdfSignatureDictionary for field with name '{}'",
-									pdfSignatureField.getFieldName(), e);
+									fullyQualifiedName, e);
 							continue;
 						}
 

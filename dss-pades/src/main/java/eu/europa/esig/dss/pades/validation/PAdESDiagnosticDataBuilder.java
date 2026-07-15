@@ -104,7 +104,7 @@ public class PAdESDiagnosticDataBuilder extends CAdESDiagnosticDataBuilder {
 
 	private XmlPDFSignatureField getXmlPDFSignatureField(PdfSignatureField pdfSignatureField) {
 		XmlPDFSignatureField xmlPdfSignatureField = new XmlPDFSignatureField();
-		xmlPdfSignatureField.setName(pdfSignatureField.getFieldName());
+		xmlPdfSignatureField.setName(pdfSignatureField.getFullyQualifiedName());
 		xmlPdfSignatureField.setSigFieldLock(getXmlPDFLockDictionary(pdfSignatureField.getLockDictionary()));
 		return xmlPdfSignatureField;
 	}

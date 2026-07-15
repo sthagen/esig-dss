@@ -47,9 +47,8 @@ public interface PdfDocumentReader extends Closeable {
 	 * Extracts PdfSignatureDictionaries present in the signature
 	 * 
 	 * @return a map between {@link PdfSignatureDictionary} and related {@link PdfSignatureField}s
-	 * @throws IOException if an exception occurs
 	 */
-	Map<PdfSignatureDictionary, List<PdfSignatureField>> extractSigDictionaries() throws IOException;
+	Map<PdfSignatureDictionary, List<PdfSignatureField>> extractSigDictionaries();
 	
 	/**
 	 * Checks if a signature for the given PDF Signature Dictionary covers the whole document
