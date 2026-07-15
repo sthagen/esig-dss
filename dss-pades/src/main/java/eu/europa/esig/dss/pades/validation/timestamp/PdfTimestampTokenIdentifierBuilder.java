@@ -53,7 +53,7 @@ public class PdfTimestampTokenIdentifierBuilder extends TimestampIdentifierBuild
         StringBuilder stringBuilder = new StringBuilder();
         PdfDocTimestampRevision pdfRevision = pdfTimestampToken.getPdfRevision();
         for (PdfSignatureField signatureField : pdfRevision.getFields()) {
-            stringBuilder.append(signatureField.getFieldName());
+            stringBuilder.append(signatureField.getFullyQualifiedName());
         }
         return stringBuilder.toString();
     }

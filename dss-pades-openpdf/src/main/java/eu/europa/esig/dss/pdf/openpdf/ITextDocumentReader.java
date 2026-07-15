@@ -220,7 +220,7 @@ public class ITextDocumentReader implements PdfDocumentReader {
 			for (String name : names) {
 				PdfDictionary pdfField = allFields.get(name).getMerged(0);
 				final ITextPdfDict fieldDict = new ITextPdfDict(pdfField);
-				final PdfSignatureField pdfSignatureField = new PdfSignatureField(fieldDict);
+				final PdfSignatureField pdfSignatureField = new PdfSignatureField(fieldDict, name);
 
 				int refNumber = 0;
 				PdfIndirectReference indirectObject = pdfField.getAsIndirectObject(PdfName.V);
@@ -263,7 +263,7 @@ public class ITextDocumentReader implements PdfDocumentReader {
 		AcroFields acroFields = pdfReader.getAcroFields();
 		List<PdfSignatureField> fields = signatureDictionaryMap.get(signatureDictionary);
 		if (Utils.isCollectionNotEmpty(fields)) {
-			return acroFields.signatureCoversWholeDocument(fields.get(0).getFieldName());
+			return acroFields.signatureCoversWholeDocument(fields.get(0).getFullyQualifiedName());
 		}
 		throw new DSSException("Not applicable use of the method isSignatureCoversWholeDocument. " +
 				"The requested signatureDictionary does not exist!");

@@ -51,7 +51,7 @@ public class PAdESSignatureIdentifierBuilder extends AbstractSignatureIdentifier
 		StringBuilder stringBuilder = new StringBuilder();
 		PdfSignatureRevision pdfRevision = padesSignature.getPdfRevision();
 		for (PdfSignatureField signatureField : pdfRevision.getFields()) {
-			stringBuilder.append(signatureField.getFieldName());
+			stringBuilder.append(signatureField.getFullyQualifiedName());
 		}
 		return stringBuilder.toString();
 	}

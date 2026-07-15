@@ -24,6 +24,8 @@ import eu.europa.esig.dss.pades.PAdESUtils;
 import eu.europa.esig.dss.pdf.PAdESConstants;
 import eu.europa.esig.dss.pdf.PdfDict;
 import eu.europa.esig.dss.pdf.SigFieldPermissions;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.Serializable;
 import java.util.Objects;
@@ -36,8 +38,13 @@ public class PdfSignatureField implements Serializable {
 
     private static final long serialVersionUID = 1391102373661984177L;
 
-    /** Name of the  signature field */
-    private final String fieldName;
+    private static final Logger LOG = LoggerFactory.getLogger(PdfSignatureField.class);
+
+    /** Partial name of the signature field */
+    private final String partialFieldName;
+
+    /** Fully qualified name of the signature field */
+    private final String fullyQualifiedName;
 
     /** The lock dictionary */
     private final SigFieldPermissions lockDictionary;
@@ -46,14 +53,28 @@ public class PdfSignatureField implements Serializable {
      * Default constructor
      *
      * @param sigFieldDict {@link PdfDict}
+     * @deprecated since DSS 6.6. Please use constructor
+     *             {@code PdfSignatureField(PdfDict sigFieldDict, String fullyQualifiedName)} instead.
      */
+    @Deprecated
     public PdfSignatureField(final PdfDict sigFieldDict) {
+        this(sigFieldDict, null);
+    }
+
+    /**
+     * Constructor with a fully qualified name
+     *
+     * @param sigFieldDict {@link PdfDict}
+     * @param fullyQualifiedName {@link String}
+     */
+    public PdfSignatureField(final PdfDict sigFieldDict, final String fullyQualifiedName) {
         Objects.requireNonNull(sigFieldDict, "sigFieldDict cannot be null!");
-        this.fieldName = extractFieldName(sigFieldDict);
+        this.partialFieldName = extractPartialFieldName(sigFieldDict);
+        this.fullyQualifiedName = fullyQualifiedName;
         this.lockDictionary = extractLockDictionary(sigFieldDict);
     }
 
-    private static String extractFieldName(PdfDict sigFieldDict) {
+    private static String extractPartialFieldName(PdfDict sigFieldDict) {
         return sigFieldDict.getStringValue(PAdESConstants.FIELD_NAME_NAME);
     }
 
@@ -66,12 +87,36 @@ public class PdfSignatureField implements Serializable {
     }
 
     /**
-     * This method returns a signature field's name
+     * This method returns a signature's partial field name
+     *
+     * @return {@link String} name
+     * @deprecated since DSS 6.6. Please use {@code #getPartialFieldName} instead.
+     */
+    @Deprecated
+    public String getFieldName() {
+        return partialFieldName;
+    }
+
+    /**
+     * This method returns a signature's partial field name
      *
      * @return {@link String} name
      */
-    public String getFieldName() {
-        return fieldName;
+    public String getPartialFieldName() {
+        return partialFieldName;
+    }
+
+    /**
+     * This method returns a signature field's fully qualified name.
+     *
+     * @return {@link String} fully qualified name
+     */
+    public String getFullyQualifiedName() {
+        if (fullyQualifiedName == null) {
+            // TODO : remove log message after DSS 6.6
+            LOG.warn("Fully qualified name is not defined for a field with partial name '{}'", partialFieldName);
+        }
+        return fullyQualifiedName;
     }
 
     /**
@@ -85,7 +130,7 @@ public class PdfSignatureField implements Serializable {
 
     @Override
     public String toString() {
-        return "PdfSignatureField {" +"name=" + getFieldName() + '}';
+        return "PdfSignatureField {" +"name=" + getFullyQualifiedName() + '}';
     }
 
 }
