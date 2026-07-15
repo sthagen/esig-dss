@@ -63,7 +63,7 @@ public abstract class AnnotationAndVisualChangeTest extends AbstractPAdESTestVal
 
 				assertTrue(Utils.isCollectionNotEmpty(signature.getPdfSignatureOrFormFillChanges()));
 				assertTrue(Utils.isCollectionNotEmpty(signature.getPdfAnnotationChanges()));
-				assertTrue(Utils.isCollectionNotEmpty(signature.getPdfUndefinedChanges()));
+				assertFalse(Utils.isCollectionNotEmpty(signature.getPdfUndefinedChanges()));
 
 				firstSignatureFound = true;
 
