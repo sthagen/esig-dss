@@ -40,7 +40,6 @@ class MdocIssuerSignedEAAPresentationValidatorTest extends AbstractTestDocumentV
         coseSign1.add(new CBORMap());
         coseSign1.add(createEmptyMSO());
         coseSign1.add(new CBORByteString());
-        coseSign1.toDataItem().setTag(18L);
         return coseSign1;
     }
 
