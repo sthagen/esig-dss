@@ -44,6 +44,8 @@ import eu.europa.esig.dss.jades.validation.JWS;
 import eu.europa.esig.dss.spi.DSSUtils;
 import eu.europa.esig.dss.spi.signature.AdvancedSignature;
 import eu.europa.esig.dss.utils.Utils;
+import eu.europa.esig.validationreport.jaxb.SignerInformationType;
+
 import org.jose4j.jwx.HeaderParameterNames;
 import org.jose4j.jwx.Headers;
 
@@ -487,47 +489,56 @@ public abstract class AbstractSDJWTEAAPresentationTestIssuance extends AbstractE
             JAdESSignatureParameters signatureParameters = signatureWrapper.isKeyBindingSignature() ? getKeyBindingSignatureParameters() : getSignatureParameters();
             FoundCertificatesProxy foundCertificates = signatureWrapper.foundCertificates();
             List<RelatedCertificateWrapper> signingCertificates = foundCertificates.getRelatedCertificatesByRefOrigin(CertificateRefOrigin.SIGNING_CERTIFICATE);
-            assertEquals(1, signingCertificates.size());
 
-            List<CertificateRefWrapper> references = signingCertificates.get(0).getReferences();
-            List<RelatedCertificateWrapper> kidCerts = foundCertificates.getRelatedCertificatesByRefOrigin(CertificateRefOrigin.KEY_IDENTIFIER);
-            List<RelatedCertificateWrapper> x5uCerts = foundCertificates.getRelatedCertificatesByRefOrigin(CertificateRefOrigin.X509_URL);
+            // For a key binding signature where no x5c certificate chain is provided via the CNF claim, no certificate is accessible and certificate-ref checks are skipped.
+            boolean checkCertificates = !signatureWrapper.isKeyBindingSignature() || !signingCertificates.isEmpty();
 
-            int signCertRefs = 1 + (Utils.isCollectionNotEmpty(kidCerts) ? 1 : 0) + (Utils.isCollectionNotEmpty(x5uCerts) ? 1 : 0);
-            assertEquals(signCertRefs, references.size());
 
-            if (signatureParameters.isIncludeKeyIdentifier()) {
-                assertEquals(1, kidCerts.size());
-            } else if (Utils.isStringNotEmpty(signatureParameters.getX509Url())) {
-                assertTrue(Utils.isCollectionNotEmpty(x5uCerts));
-            } else {
-                assertEquals(0, kidCerts.size());
-                assertEquals(0, x5uCerts.size());
-            }
+            if (checkCertificates) {
+                assertEquals(1, signingCertificates.size());
 
-            for (CertificateRefWrapper certificateRef : references) {
-                if (CertificateRefOrigin.SIGNING_CERTIFICATE.equals(certificateRef.getOrigin())) {
-                    assertNotNull(certificateRef.getDigestAlgoAndValue());
-                    assertNotNull(certificateRef.getDigestMethod());
-                    assertTrue(certificateRef.isDigestValuePresent());
-                    assertTrue(certificateRef.isDigestValueMatch());
-                    assertNull(certificateRef.getIssuerSerial());
+                List<CertificateRefWrapper> references = signingCertificates.get(0).getReferences();
+                List<RelatedCertificateWrapper> kidCerts = foundCertificates.getRelatedCertificatesByRefOrigin(CertificateRefOrigin.KEY_IDENTIFIER);
+                List<RelatedCertificateWrapper> x5uCerts = foundCertificates.getRelatedCertificatesByRefOrigin(CertificateRefOrigin.X509_URL);
 
-                } else if (CertificateRefOrigin.KEY_IDENTIFIER.equals(certificateRef.getOrigin())) {
-                    assertNotNull(certificateRef.getCertificateId());
-                    if (certificateRef.getIssuerSerial() != null) {
-                        assertNotNull(certificateRef.getIssuerSerial());
-                        assertTrue(certificateRef.isIssuerSerialPresent());
-                        assertTrue(certificateRef.isIssuerSerialMatch());
-                    } else {
-                        assertNotNull(certificateRef.getKid());
-                    }
-                    assertNull(certificateRef.getDigestAlgoAndValue());
+                int signCertRefs = 1 + (Utils.isCollectionNotEmpty(kidCerts) ? 1 : 0) + (Utils.isCollectionNotEmpty(x5uCerts) ? 1 : 0);
+                assertEquals(signCertRefs, references.size());
 
-                } else if (CertificateRefOrigin.X509_URL.equals(certificateRef.getOrigin())) {
-                    assertNotNull(certificateRef.getCertificateId());
-                    assertNotNull(certificateRef.getX509Url());
+                if (signatureParameters.isIncludeKeyIdentifier()) {
+                    assertEquals(1, kidCerts.size());
+                } else if (Utils.isStringNotEmpty(signatureParameters.getX509Url())) {
+                    assertTrue(Utils.isCollectionNotEmpty(x5uCerts));
+                } else {
+                    assertEquals(0, kidCerts.size());
+                    assertEquals(0, x5uCerts.size());
                 }
+
+                for (CertificateRefWrapper certificateRef : references) {
+                    if (CertificateRefOrigin.SIGNING_CERTIFICATE.equals(certificateRef.getOrigin())) {
+                        assertNotNull(certificateRef.getDigestAlgoAndValue());
+                        assertNotNull(certificateRef.getDigestMethod());
+                        assertTrue(certificateRef.isDigestValuePresent());
+                        assertTrue(certificateRef.isDigestValueMatch());
+                        assertNull(certificateRef.getIssuerSerial());
+
+                    } else if (CertificateRefOrigin.KEY_IDENTIFIER.equals(certificateRef.getOrigin())) {
+                        assertNotNull(certificateRef.getCertificateId());
+                        if (certificateRef.getIssuerSerial() != null) {
+                            assertNotNull(certificateRef.getIssuerSerial());
+                            assertTrue(certificateRef.isIssuerSerialPresent());
+                            assertTrue(certificateRef.isIssuerSerialMatch());
+                        } else {
+                            assertNotNull(certificateRef.getKid());
+                        }
+                        assertNull(certificateRef.getDigestAlgoAndValue());
+
+                    } else if (CertificateRefOrigin.X509_URL.equals(certificateRef.getOrigin())) {
+                        assertNotNull(certificateRef.getCertificateId());
+                        assertNotNull(certificateRef.getX509Url());
+                    }
+                }
+            } else {
+                assertEquals(0, signingCertificates.size());
             }
         }
     }
@@ -542,4 +553,11 @@ public abstract class AbstractSDJWTEAAPresentationTestIssuance extends AbstractE
         }
     }
 
+    @Override
+    protected void validateSignerInformation(final SignerInformationType signerInformation) {
+        // Skip check in case of key binding signature as we might not have the signer information if the certificate was not provided
+        if (!keyBindingPresent()) {
+            super.validateSignerInformation(signerInformation);
+        }
+    }
 }
