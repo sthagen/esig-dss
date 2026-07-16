@@ -1221,6 +1221,27 @@ class PAdESSignatureFieldTest extends PKIFactoryAccess {
 		assertEquals("The new signature field position overlaps with an existing annotation!", exception.getMessage());
 	}
 
+	@Test
+	void fullyQualifiedNamesTest() throws IOException {
+		DSSDocument doc = new InMemoryDocument(getClass().getResourceAsStream("/doc-fully-qualified-name.pdf"));
+
+		List<String> availableSignatureFields = service.getAvailableSignatureFields(doc);
+		assertEquals(2, availableSignatureFields.size());
+
+		assertTrue(availableSignatureFields.contains("level1.level2.field1"));
+		assertTrue(availableSignatureFields.contains("altLevel1.altLevel2.field1"));
+
+		signatureParameters.getImageParameters().getFieldParameters().setFieldId("level1.level2.field1");
+
+		DSSDocument doc2 = signAndValidate(doc);
+		assertNotNull(doc2);
+
+		signatureParameters.getImageParameters().getFieldParameters().setFieldId("altLevel1.altLevel2.field1");
+
+		DSSDocument doc3 = signAndValidate(doc2);
+		assertNotNull(doc3);
+	}
+
 	private DSSDocument signAndValidate(DSSDocument documentToSign) throws IOException {
 		DSSDocument signedDocument = sign(documentToSign);
 		validate(signedDocument, false);

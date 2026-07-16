@@ -64,8 +64,17 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 public abstract class AbstractPAdESTestExtension extends AbstractTestExtension<PAdESSignatureParameters, PAdESTimestampParameters> {
 
+	private FileDocument originalDocument;
+
 	@Override
 	protected FileDocument getOriginalDocument() {
+		if (originalDocument == null) {
+			originalDocument = generateOriginalDocument();
+		}
+		return originalDocument;
+	}
+
+	protected FileDocument generateOriginalDocument() {
 		File originalDoc = new File("target/original-" + UUID.randomUUID().toString() + ".pdf");
 		try (FileOutputStream fos = new FileOutputStream(originalDoc); InputStream is = AbstractPAdESTestExtension.class.getResourceAsStream("/sample.pdf")) {
 			Utils.copy(is, fos);
