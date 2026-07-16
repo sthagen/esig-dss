@@ -3,7 +3,6 @@ package eu.europa.esig.dss.eaa.mdoc.validation;
 import eu.europa.esig.dss.cbades.cbor.CBORArray;
 import eu.europa.esig.dss.cbades.cbor.CBORByteString;
 import eu.europa.esig.dss.cbades.cbor.CBORMap;
-import eu.europa.esig.dss.cbades.cbor.CBORNull;
 import eu.europa.esig.dss.cbades.cbor.CBORUtils;
 import eu.europa.esig.dss.eaa.common.validation.DefaultEAAPresentationValidator;
 import eu.europa.esig.dss.model.DSSDocument;
@@ -39,10 +38,16 @@ class MdocIssuerSignedEAAPresentationValidatorTest extends AbstractTestDocumentV
         CBORArray coseSign1 = new CBORArray(4);
         coseSign1.add(new CBORByteString());
         coseSign1.add(new CBORMap());
-        coseSign1.add(new CBORNull());
+        coseSign1.add(createEmptyMSO());
         coseSign1.add(new CBORByteString());
         coseSign1.toDataItem().setTag(18L);
         return coseSign1;
+    }
+
+    private static CBORByteString createEmptyMSO() {
+        CBORMap msoMap = new CBORMap();
+        CBORByteString msoBytes = msoMap.getByteString();
+        return new CBORByteString(CBORUtils.serializeCborObject(msoBytes));
     }
 
     @Test
@@ -95,7 +100,7 @@ class MdocIssuerSignedEAAPresentationValidatorTest extends AbstractTestDocumentV
 
     @Override
     protected List<DSSDocument> getValidDocuments() {
-        return Collections.singletonList(MINIMAL_ISSUER_SIGNED);
+        return Collections.singletonList(new FileDocument("src/test/resources/validation/mdocIssuerSigned.cbor"));
     }
 
     @Override
